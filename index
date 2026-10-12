@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Merch Opportunity Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            500: '#10b981',
+                            600: '#059669',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617; /* slate-950 */
+            color: #f8fafc;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col justify-between">
+
+    <div>
+        <header class="border-b border-slate-800/80 glass-panel sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent">
+                            Merch Opportunity Finder
+                        </h1>
+                        <p class="text-xs text-slate-400">Regional Football Cult Heroes & Market Gap Radar</p>
+                    </div>
+                </div>
+
+                <!-- Web App Sync Bar -->
+                <div class="w-full md:w-auto flex-1 max-w-xl">
+                    <div class="relative flex items-center">
+                        <input 
+                            type="text" 
+                            id="scriptUrlInput"
+                            placeholder="Paste your Google Apps Script Web App URL here..."
+                            class="w-full pl-3 pr-28 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                        />
+                        <button 
+                            id="syncBtn"
+                            onclick="handleSync()"
+                            class="absolute right-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition duration-150 flex items-center space-x-1 shadow-lg shadow-emerald-950/50">
+                            <svg id="syncIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span id="syncBtnText">Connect</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+            <!-- Data Source Status Alert -->
+            <div id="statusBanner" class="hidden p-4 rounded-xl border text-xs flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span id="statusIndicator" class="w-2 h-2 rounded-full"></span>
+                    <span id="statusMessage">Checking connection...</span>
+                </div>
+                <button onclick="dismissStatus()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <!-- Executive Metrics -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="text-slate-400 text-xs font-medium uppercase tracking-wider">Unmet Opportunity Gaps</div>
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <span id="statGaps" class="text-3xl font-extrabold text-emerald-400">0</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">Gaps Found</span>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="text-slate-400 text-xs font-medium uppercase tracking-wider">Est. Monthly Unmet Demand</div>
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <span id="statDemand" class="text-3xl font-extrabold text-slate-100">0</span>
+                        <span class="text-xs text-slate-400">Searches/mo</span>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="text-slate-400 text-xs font-medium uppercase tracking-wider">Top Opportunity League</div>
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <span id="statTopLeague" class="text-2xl font-bold text-indigo-400 truncate max-w-[180px]">-</span>
+                        <span class="text-xs text-slate-400">By Gaps</span>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Tracked Players</div>
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <span id="statTotal" class="text-3xl font-extrabold text-slate-100">0</span>
+                        <span class="text-xs text-slate-400">Active Radar</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filter & Search Section -->
+            <section class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div class="w-full md:w-1/3 relative">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search player, club, or region..."
+                        oninput="renderDashboard()"
+                        class="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700/70 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                    />
+                    <svg class="w-4 h-4 text-slate-500 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+
+                <div class="w-full md:w-auto flex flex-wrap gap-3 items-center justify-end">
+                    <!-- Catalog Status Filter -->
+                    <select id="statusFilter" onchange="renderDashboard()" class="bg-slate-900 border border-slate-700/70 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                        <option value="all">Catalog Status: All</option>
+                        <option value="gaps" selected>Gaps Only (Not in Store)</option>
+                        <option value="incatalog">In Store Only</option>
+                    </select>
+
+                    <!-- League Filter -->
+                    <select id="leagueFilter" onchange="renderDashboard()" class="bg-slate-900 border border-slate-700/70 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                        <option value="all">All Leagues</option>
+                    </select>
+
+                    <!-- Sorting Dropdown -->
+                    <select id="sortFilter" onchange="renderDashboard()" class="bg-slate-900 border border-slate-700/70 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                        <option value="scoreDesc">Sort: Highest Score</option>
+                        <option value="demandDesc">Sort: Highest Search Demand</option>
+                        <option value="nameAsc">Sort: Name A-Z</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Main Data Table -->
+            <section class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/80 border-b border-slate-800 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                                <th class="p-4">Player / Club</th>
+                                <th class="p-4">League & Region</th>
+                                <th class="p-4 text-right">Est. Monthly Search</th>
+                                <th class="p-4 text-center">Catalog Status</th>
+                                <th class="p-4 text-center">Opportunity Score</th>
+                                <th class="p-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playerTableBody" class="divide-y divide-slate-800/60 text-sm">
+                            <!-- Dynamic Content Rendered Here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden p-12 text-center">
+                    <p class="text-slate-400 text-sm">No players match your active filters.</p>
+                </div>
+            </section>
+
+            <!-- Setup Guide Callout -->
+            <section class="p-6 rounded-2xl glass-card border border-indigo-500/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <h3 class="text-sm font-semibold text-indigo-300">How to Connect Your Google Sheet</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        1. Open your Google Sheet &gt; Extensions &gt; Apps Script.<br>
+                        2. Paste your <code class="text-emerald-400">doGet()</code> code and click <strong>Deploy &gt; New deployment &gt; Web app (Anyone)</strong>.<br>
+                        3. Copy the URL, paste it into the header field above, and click <strong>Connect</strong>.
+                    </p>
+                </div>
+                <a href="https://script.google.com" target="_blank" class="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-medium transition shrink-0">
+                    Open Google Apps Script ↗
+                </a>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
+        Merchandise Market Radar &bull; Automated Data Sync via Google Apps Script
+    </footer>
+
+    <!-- Player Insights Modal -->
+    <div id="insightsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-panel w-full max-w-lg rounded-2xl p-6 border border-slate-700/50 shadow-2xl space-y-5">
+            <div class="flex items-start justify-between border-b border-slate-800 pb-4">
+                <div>
+                    <h3 id="modalName" class="text-lg font-bold text-white"></h3>
+                    <p id="modalMeta" class="text-xs text-slate-400"></p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <span class="text-slate-400 uppercase tracking-wider font-semibold block mb-1">Cult Popularity & Regional Relevance</span>
+                    <p id="modalReason" class="text-slate-200 leading-relaxed p-3 rounded-xl bg-slate-900/80 border border-slate-800"></p>
+                </div>
+
+                <div>
+                    <span class="text-slate-400 uppercase tracking-wider font-semibold block mb-1">Recommended Merch Design Concept</span>
+                    <p id="modalMerch" class="text-emerald-300 font-medium p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20"></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block mb-0.5">Estimated Search Demand</span>
+                        <span id="modalDemand" class="text-sm font-bold text-white"></span>
+                    </div>
+                    <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block mb-0.5">Opportunity Score</span>
+                        <span id="modalScore" class="text-sm font-bold text-emerald-400"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fallback / Demo Dataset if no Web App URL is provided
+        const DEMO_DATA = [
+            {
+                Name: "Giorgian de Arrascaeta",
+                Club: "Flamengo",
+                League: "Série A",
+                Region: "Brazil / Uruguay",
+                Demand: 65000,
+                InCatalog: "false",
+                Reason: "Iconic playmaker for South American giant; huge local cult following with high online engagement.",
+                Merch: "Retro style graphic tees, custom typography hoodies featuring iconic match celebrations."
+            },
+            {
+                Name: "Dion Drena Beljo",
+                Club: "Rapid Vienna",
+                League: "Austrian Bundesliga",
+                Region: "Central Europe",
+                Demand: 28000,
+                InCatalog: "false",
+                Reason: "Rising striking talent with passionate regional fanbase and viral goal clips.",
+                Merch: "Minimalist streetwear hoodies with player logo monogram."
+            },
+            {
+                Name: "Evander",
+                Club: "Portland Timbers",
+                League: "MLS",
+                Region: "North America / Brazil",
+                Demand: 42000,
+                InCatalog: "false",
+                Reason: "High-volume chance creator with dedicated supporters club tracking his performance.",
+                Merch: "Vintage bootleg design apparel, localized stadium scarves."
+            },
+            {
+                Name: "Facundo Torres",
+                Club: "Orlando City",
+                League: "MLS",
+                Region: "North America / Uruguay",
+                Demand: 31000,
+                InCatalog: "true",
+                Reason: "Key attacking winger with strong South American cross-border appeal.",
+                Merch: "Official jersey prints and signature caps."
+            },
+            {
+                Name: "Pedro",
+                Club: "Flamengo",
+                League: "Série A",
+                Region: "Brazil",
+                Demand: 78000,
+                InCatalog: "false",
+                Reason: "Consistent goalscorer in Libertadores; massive jersey search volume in Latin America.",
+                Merch: "'Striker' silhouette graphic oversized t-shirts."
+            }
+        ];
+
+        let rawPlayerData = [];
+
+        // App Initialization
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('script_web_app_url');
+            if (savedUrl) {
+                document.getElementById('scriptUrlInput').value = savedUrl;
+                fetchDataFromUrl(savedUrl);
+            } else {
+                showStatus("Loaded local demo data. Connect your Google Script URL above to sync live data.", "info");
+                processData(DEMO_DATA);
+            }
+        };
+
+        async function handleSync() {
+            const url = document.getElementById('scriptUrlInput').value.trim();
+            if (!url) {
+                showStatus("Please paste a valid Google Apps Script Web App URL.", "error");
+                return;
+            }
+
+            const btnText = document.getElementById('syncBtnText');
+            const syncIcon = document.getElementById('syncIcon');
+            
+            btnText.innerText = "Connecting...";
+            syncIcon.classList.add('animate-spin');
+
+            localStorage.setItem('script_web_app_url', url);
+            await fetchDataFromUrl(url);
+
+            syncIcon.classList.remove('animate-spin');
+            btnText.innerText = "Connect";
+        }
+
+        async function fetchDataFromUrl(url) {
+            try {
+                showStatus("Syncing with Google Sheets...", "info");
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    processData(data);
+                    showStatus("Successfully synced with Google Sheet!", "success");
+                } else {
+                    throw new Error("Received empty dataset from Google Apps Script.");
+                }
+            } catch (err) {
+                console.warn("Sync failed, falling back to cached or demo data.", err);
+                showStatus(`Sync error: ${err.message}. Showing demo data.`, "error");
+                processData(DEMO_DATA);
+            }
+        }
+
+        function parseBool(val) {
+            if (typeof val === 'boolean') return val;
+            if (typeof val === 'string') {
+                const clean = val.trim().toLowerCase();
+                return clean === 'true' || clean === 'yes' || clean === '1';
+            }
+            return false;
+        }
+
+        function calculateOpportunityScore(inCatalog, demand) {
+            if (inCatalog) return 0;
+            const numericDemand = parseInt(demand) || 0;
+            const score = Math.round((numericDemand / 50000 * 50) + 20);
+            return Math.min(100, Math.max(0, score));
+        }
+
+        function processData(data) {
+            rawPlayerData = data.map((item, idx) => {
+                const inCatalog = parseBool(item.InCatalog || item.incatalog);
+                const demand = parseInt(item.Demand || item.demand || 0);
+                const score = calculateOpportunityScore(inCatalog, demand);
+
+                return {
+                    id: idx,
+                    Name: item.Name || item.name || "Unknown Player",
+                    Club: item.Club || item.club || "Unattached",
+                    League: item.League || item.league || "Other",
+                    Region: item.Region || item.region || "Global",
+                    Demand: demand,
+                    InCatalog: inCatalog,
+                    Score: score,
+                    Reason: item.Reason || item.reason || "High local search momentum.",
+                    Merch: item.Merch || item.merch || "Graphic apparel & accessories."
+                };
+            });
+
+            populateLeagueFilter();
+            renderDashboard();
+        }
+
+        function populateLeagueFilter() {
+            const leagueFilter = document.getElementById('leagueFilter');
+            const leagues = [...new Set(rawPlayerData.map(p => p.League))].filter(Boolean);
+            
+            leagueFilter.innerHTML = '<option value="all">All Leagues</option>';
+            leagues.forEach(league => {
+                const opt = document.createElement('option');
+                opt.value = league;
+                opt.textContent = league;
+                leagueFilter.appendChild(opt);
+            });
+        }
+
+        function renderDashboard() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const leagueFilter = document.getElementById('leagueFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+
+            // Filter logic
+            let filtered = rawPlayerData.filter(p => {
+                const matchesSearch = p.Name.toLowerCase().includes(searchQuery) || 
+                                      p.Club.toLowerCase().includes(searchQuery) || 
+                                      p.Region.toLowerCase().includes(searchQuery);
+                
+                let matchesStatus = true;
+                if (statusFilter === 'gaps') matchesStatus = !p.InCatalog;
+                if (statusFilter === 'incatalog') matchesStatus = p.InCatalog;
+
+                let matchesLeague = (leagueFilter === 'all') || (p.League === leagueFilter);
+
+                return matchesSearch && matchesStatus && matchesLeague;
+            });
+
+            // Sorting logic
+            filtered.sort((a, b) => {
+                if (sortFilter === 'scoreDesc') return b.Score - a.Score;
+                if (sortFilter === 'demandDesc') return b.Demand - a.Demand;
+                if (sortFilter === 'nameAsc') return a.Name.localeCompare(b.Name);
+                return 0;
+            });
+
+            // Update Metrics Cards
+            const gaps = rawPlayerData.filter(p => !p.InCatalog);
+            const totalUnmetDemand = gaps.reduce((acc, p) => acc + p.Demand, 0);
+
+            // Find League with highest gap count
+            const leagueGapCounts = {};
+            gaps.forEach(p => {
+                leagueGapCounts[p.League] = (leagueGapCounts[p.League] || 0) + 1;
+            });
+            let topLeague = "-";
+            let maxGaps = 0;
+            for (const [lg, count] of Object.entries(leagueGapCounts)) {
+                if (count > maxGaps) {
+                    maxGaps = count;
+                    topLeague = lg;
+                }
+            }
+
+            document.getElementById('statGaps').innerText = gaps.length;
+            document.getElementById('statDemand').innerText = totalUnmetDemand.toLocaleString();
+            document.getElementById('statTopLeague').innerText = topLeague;
+            document.getElementById('statTotal').innerText = rawPlayerData.length;
+
+            // Render Table Rows
+            const tbody = document.getElementById('playerTableBody');
+            const emptyState = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-900/50 transition duration-150';
+
+                let scoreBadgeClass = 'bg-slate-800 text-slate-400 border-slate-700';
+                if (p.Score >= 80) scoreBadgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                else if (p.Score >= 50) scoreBadgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <div class="font-semibold text-slate-100">${p.Name}</div>
+                        <div class="text-xs text-slate-400">${p.Club}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-xs text-slate-300">${p.League}</div>
+                        <div class="text-[11px] text-slate-500">${p.Region}</div>
+                    </td>
+                    <td class="p-4 text-right font-medium text-slate-200">
+                        ${p.Demand.toLocaleString()}
+                    </td>
+                    <td class="p-4 text-center">
+                        ${p.InCatalog 
+                            ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">In Catalog</span>`
+                            : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">Catalog Gap</span>`
+                        }
+                    </td>
+                    <td class="p-4 text-center">
+                        <span class="inline-block px-3 py-1 rounded-xl text-xs font-bold border ${scoreBadgeClass}">
+                            ${p.Score} / 100
+                        </span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="openModal(${p.id})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition">
+                            View Insights
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function showStatus(msg, type) {
+            const banner = document.getElementById('statusBanner');
+            const text = document.getElementById('statusMessage');
+            const dot = document.getElementById('statusIndicator');
+
+            banner.classList.remove('hidden', 'bg-emerald-950/40', 'border-emerald-500/30', 'bg-rose-950/40', 'border-rose-500/30', 'bg-slate-900', 'border-slate-800');
+
+            if (type === 'success') {
+                banner.classList.add('bg-emerald-950/40', 'border-emerald-500/30', 'text-emerald-300');
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+            } else if (type === 'error') {
+                banner.classList.add('bg-rose-950/40', 'border-rose-500/30', 'text-rose-300');
+                dot.className = 'w-2 h-2 rounded-full bg-rose-400';
+            } else {
+                banner.classList.add('bg-slate-900', 'border-slate-800', 'text-slate-300');
+                dot.className = 'w-2 h-2 rounded-full bg-indigo-400';
+            }
+
+            text.innerText = msg;
+        }
+
+        function dismissStatus() {
+            document.getElementById('statusBanner').classList.add('hidden');
+        }
+
+        function openModal(id) {
+            const p = rawPlayerData.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('modalName').innerText = p.Name;
+            document.getElementById('modalMeta').innerText = `${p.Club} • ${p.League} (${p.Region})`;
+            document.getElementById('modalReason').innerText = p.Reason;
+            document.getElementById('modalMerch').innerText = p.Merch;
+            document.getElementById('modalDemand').innerText = `${p.Demand.toLocaleString()} / mo`;
+            document.getElementById('modalScore').innerText = `${p.Score} / 100`;
+
+            const modal = document.getElementById('insightsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('insightsModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
